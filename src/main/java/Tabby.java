@@ -175,6 +175,30 @@ public class Tabby {
                     System.out.println("     OK, I've marked this task as not done yet:");
                     System.out.println("       " + task);
                     System.out.println(divider);
+                } else if (input.startsWith("delete")) {
+                    String[] parts = input.split(" ");
+                    if (parts.length < 2 || parts[1].trim().isEmpty()) {
+                        throw new TabbyException("Please specify a task number to delete.");
+                    }
+
+                    int taskIndex;
+                    try {
+                        taskIndex = Integer.parseInt(parts[1]) - 1;
+                    } catch (NumberFormatException e) {
+                        throw new TabbyException("Please enter a valid task number.");
+                    }
+
+                    if (taskIndex < 0 || taskIndex >= tasks.size()) {
+                        throw new TabbyException("Task number out of range.");
+                    }
+
+                    Task removedTask = tasks.remove(taskIndex);
+
+                    System.out.println(divider);
+                    System.out.println("     Noted. I've removed this task:");
+                    System.out.println("       " + removedTask);
+                    System.out.println("     Now you have " + tasks.size() + " tasks in the list.");
+                    System.out.println(divider);
                 } else if (input.startsWith("todo")) {
                     String description = input.length() > 4 ? input.substring(4).trim() : "";
                     if (description.isEmpty()) {
@@ -232,7 +256,7 @@ public class Tabby {
                 }
             } catch (TabbyException e) {
                 System.out.println(divider);
-                System.out.println("     Oh No!!! " + e.getMessage());
+                System.out.println("     OOPS!!! " + e.getMessage());
                 System.out.println(divider);
             }
         }
