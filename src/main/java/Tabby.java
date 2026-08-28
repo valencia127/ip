@@ -1,11 +1,24 @@
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Main application class for the Tabby task manager.
+ */
 public class Tabby {
 
-    // Custom exception class for chatbot-specific errors
+    private static final String DIVIDER = "    ____________________________________________________________";
+    private static final String FILE_DELIMITER = " \\| ";
+    private static final Path FILE_PATH = Paths.get("data", "tabby.txt");
+
+    /**
+     * Custom exception class for chatbot-specific errors.
+     */
     public static class TabbyException extends Exception {
 
         public TabbyException(String message) {
@@ -32,7 +45,11 @@ public class Tabby {
         }
 
         public String getStatusIcon() {
-            return (isDone ? "X" : " ");
+            return isDone ? "X" : " ";
+        }
+
+        public String toFileFormat() {
+            return (isDone ? "1" : "0") + " | " + description;
         }
 
         @Override
@@ -48,6 +65,11 @@ public class Tabby {
         }
 
         @Override
+        public String toFileFormat() {
+            return "T | " + super.toFileFormat();
+        }
+
+        @Override
         public String toString() {
             return "[T]" + super.toString();
         }
@@ -60,6 +82,11 @@ public class Tabby {
         public Deadline(String description, String by) {
             super(description);
             this.by = by;
+        }
+
+        @Override
+        public String toFileFormat() {
+            return "D | " + super.toFileFormat() + " | " + by;
         }
 
         @Override
@@ -80,187 +107,277 @@ public class Tabby {
         }
 
         @Override
+        public String toFileFormat() {
+            return "E | " + super.toFileFormat() + " | " + from + " | " + to;
+        }
+
+        @Override
         public String toString() {
             return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";
         }
     }
 
-    public static String formatList(List<Task> items) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("     Here are the tasks in your list:\n");
-        for (int i = 0; i < items.size(); i++) {
-            sb.append("     ")
-                    .append(i + 1)
-                    .append(".")
-                    .append(items.get(i))
-                    .append("\n");
-        }
-        return sb.toString();
-    }
-
-    private static void printTaskAdded(String divider, Task task, int taskCount) {
-        System.out.println(divider);
-        System.out.println("     Got it. I've added this task:");
-        System.out.println("       " + task);
-        System.out.println("     Now you have " + taskCount + " tasks in the list.");
-        System.out.println(divider);
-    }
-
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        String divider = "    ____________________________________________________________";
-        List<Task> tasks = new ArrayList<>();
+        List<Task> tasks = loadTasks();
 
         System.out.println("     What can I do for you?");
-        System.out.println(divider + "\n");
+        System.out.println(DIVIDER + "\n");
 
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().trim();
+            if (input.equals("bye")) {
+                System.out.println(DIVIDER);
+                System.out.println("     Bye. Hope to see you again soon!");
+                System.out.println(DIVIDER);
+                break;
+            }
 
             try {
-                if (input.equals("bye")) {
-                    System.out.println(divider);
-                    System.out.println("     Bye. Hope to see you again soon!");
-                    System.out.println(divider);
-                    break;
-                } else if (input.equals("list")) {
-                    System.out.println(divider);
-                    System.out.print(formatList(tasks));
-                    System.out.println(divider);
-                } else if (input.startsWith("mark")) {
-                    String[] parts = input.split(" ");
-                    if (parts.length < 2 || parts[1].trim().isEmpty()) {
-                        throw new TabbyException("Please specify a task number to mark.");
-                    }
-
-                    int taskIndex;
-                    try {
-                        taskIndex = Integer.parseInt(parts[1]) - 1;
-                    } catch (NumberFormatException e) {
-                        throw new TabbyException("Please enter a valid task number.");
-                    }
-
-                    if (taskIndex < 0 || taskIndex >= tasks.size()) {
-                        throw new TabbyException("Task number out of range.");
-                    }
-
-                    Task task = tasks.get(taskIndex);
-                    task.markAsDone();
-
-                    System.out.println(divider);
-                    System.out.println("     Nice! I've marked this task as done:");
-                    System.out.println("       " + task);
-                    System.out.println(divider);
-                } else if (input.startsWith("unmark")) {
-                    String[] parts = input.split(" ");
-                    if (parts.length < 2 || parts[1].trim().isEmpty()) {
-                        throw new TabbyException("Please specify a task number to unmark.");
-                    }
-
-                    int taskIndex;
-                    try {
-                        taskIndex = Integer.parseInt(parts[1]) - 1;
-                    } catch (NumberFormatException e) {
-                        throw new TabbyException("Please enter a valid task number.");
-                    }
-
-                    if (taskIndex < 0 || taskIndex >= tasks.size()) {
-                        throw new TabbyException("Task number out of range.");
-                    }
-
-                    Task task = tasks.get(taskIndex);
-                    task.markAsNotDone();
-
-                    System.out.println(divider);
-                    System.out.println("     OK, I've marked this task as not done yet:");
-                    System.out.println("       " + task);
-                    System.out.println(divider);
-                } else if (input.startsWith("delete")) {
-                    String[] parts = input.split(" ");
-                    if (parts.length < 2 || parts[1].trim().isEmpty()) {
-                        throw new TabbyException("Please specify a task number to delete.");
-                    }
-
-                    int taskIndex;
-                    try {
-                        taskIndex = Integer.parseInt(parts[1]) - 1;
-                    } catch (NumberFormatException e) {
-                        throw new TabbyException("Please enter a valid task number.");
-                    }
-
-                    if (taskIndex < 0 || taskIndex >= tasks.size()) {
-                        throw new TabbyException("Task number out of range.");
-                    }
-
-                    Task removedTask = tasks.remove(taskIndex);
-
-                    System.out.println(divider);
-                    System.out.println("     Noted. I've removed this task:");
-                    System.out.println("       " + removedTask);
-                    System.out.println("     Now you have " + tasks.size() + " tasks in the list.");
-                    System.out.println(divider);
-                } else if (input.startsWith("todo")) {
-                    String description = input.length() > 4 ? input.substring(4).trim() : "";
-                    if (description.isEmpty()) {
-                        throw new TabbyException("The description of a todo cannot be empty.");
-                    }
-
-                    Task task = new Todo(description);
-                    tasks.add(task);
-                    printTaskAdded(divider, task, tasks.size());
-                } else if (input.startsWith("deadline")) {
-                    String body = input.length() > 8 ? input.substring(8).trim() : "";
-                    if (body.isEmpty()) {
-                        throw new TabbyException("The description of a deadline cannot be empty.");
-                    }
-                    if (!body.contains(" /by ")) {
-                        throw new TabbyException("A deadline must include '/by' followed by a time.");
-                    }
-
-                    String[] parts = body.split(" /by ", 2);
-                    if (parts[0].trim().isEmpty()) {
-                        throw new TabbyException("The description of a deadline cannot be empty.");
-                    }
-                    if (parts.length < 2 || parts[1].trim().isEmpty()) {
-                        throw new TabbyException("The '/by' time of a deadline cannot be empty.");
-                    }
-
-                    Task task = new Deadline(parts[0].trim(), parts[1].trim());
-                    tasks.add(task);
-                    printTaskAdded(divider, task, tasks.size());
-                } else if (input.startsWith("event")) {
-                    String body = input.length() > 5 ? input.substring(5).trim() : "";
-                    if (body.isEmpty()) {
-                        throw new TabbyException("The description of an event cannot be empty.");
-                    }
-                    if (!body.contains(" /from ") || !body.contains(" /to ")) {
-                        throw new TabbyException("An event must include both '/from' and '/to' times.");
-                    }
-
-                    String[] parts = body.split(" /from ", 2);
-                    String description = parts[0].trim();
-                    if (description.isEmpty()) {
-                        throw new TabbyException("The description of an event cannot be empty.");
-                    }
-
-                    String[] timeParts = parts[1].split(" /to ", 2);
-                    if (timeParts[0].trim().isEmpty() || timeParts.length < 2 || timeParts[1].trim().isEmpty()) {
-                        throw new TabbyException("The '/from' and '/to' times of an event cannot be empty.");
-                    }
-
-                    Task task = new Event(description, timeParts[0].trim(), timeParts[1].trim());
-                    tasks.add(task);
-                    printTaskAdded(divider, task, tasks.size());
-                } else {
-                    throw new TabbyException("I'm sorry, but I don't know what that means :-(");
-                }
-            } catch (TabbyException e) {
-                System.out.println(divider);
-                System.out.println("     OOPS!!! " + e.getMessage());
-                System.out.println(divider);
+                processCommand(input, tasks);
+            } catch (TabbyException exception) {
+                System.out.println(DIVIDER);
+                System.out.println("     OOPS!!! " + exception.getMessage());
+                System.out.println(DIVIDER);
             }
         }
 
         scanner.close();
+    }
+
+    private static void processCommand(String input, List<Task> tasks) throws TabbyException {
+        if (input.equals("list")) {
+            printList(tasks);
+        } else if (input.startsWith("mark")) {
+            handleMark(input, tasks);
+        } else if (input.startsWith("unmark")) {
+            handleUnmark(input, tasks);
+        } else if (input.startsWith("delete")) {
+            handleDelete(input, tasks);
+        } else if (input.startsWith("todo")) {
+            handleTodo(input, tasks);
+        } else if (input.startsWith("deadline")) {
+            handleDeadline(input, tasks);
+        } else if (input.startsWith("event")) {
+            handleEvent(input, tasks);
+        } else {
+            throw new TabbyException("I'm sorry, but I don't know what that means :-(");
+        }
+    }
+
+    private static void printList(List<Task> tasks) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("     Here are the tasks in your list:\n");
+        for (int i = 0; i < tasks.size(); i++) {
+            builder.append("     ")
+                    .append(i + 1)
+                    .append(".")
+                    .append(tasks.get(i))
+                    .append("\n");
+        }
+        System.out.println(DIVIDER);
+        System.out.print(builder.toString());
+        System.out.println(DIVIDER);
+    }
+
+    private static int parseTaskIndex(String input, int taskListSize) throws TabbyException {
+        String[] parts = input.split(" ");
+        if (parts.length < 2 || parts[1].trim().isEmpty()) {
+            throw new TabbyException("Please specify a task number.");
+        }
+
+        int taskIndex;
+        try {
+            taskIndex = Integer.parseInt(parts[1]) - 1;
+        } catch (NumberFormatException exception) {
+            throw new TabbyException("Please enter a valid task number.");
+        }
+
+        if (taskIndex < 0 || taskIndex >= taskListSize) {
+            throw new TabbyException("Task number out of range.");
+        }
+
+        return taskIndex;
+    }
+
+    private static void handleMark(String input, List<Task> tasks) throws TabbyException {
+        int taskIndex = parseTaskIndex(input, tasks.size());
+        Task task = tasks.get(taskIndex);
+        task.markAsDone();
+        saveTasks(tasks);
+
+        System.out.println(DIVIDER);
+        System.out.println("     Nice! I've marked this task as done:");
+        System.out.println("       " + task);
+        System.out.println(DIVIDER);
+    }
+
+    private static void handleUnmark(String input, List<Task> tasks) throws TabbyException {
+        int taskIndex = parseTaskIndex(input, tasks.size());
+        Task task = tasks.get(taskIndex);
+        task.markAsNotDone();
+        saveTasks(tasks);
+
+        System.out.println(DIVIDER);
+        System.out.println("     OK, I've marked this task as not done yet:");
+        System.out.println("       " + task);
+        System.out.println(DIVIDER);
+    }
+
+    private static void handleDelete(String input, List<Task> tasks) throws TabbyException {
+        int taskIndex = parseTaskIndex(input, tasks.size());
+        Task removedTask = tasks.remove(taskIndex);
+        saveTasks(tasks);
+
+        System.out.println(DIVIDER);
+        System.out.println("     Noted. I've removed this task:");
+        System.out.println("       " + removedTask);
+        System.out.println("     Now you have " + tasks.size() + " tasks in the list.");
+        System.out.println(DIVIDER);
+    }
+
+    private static void handleTodo(String input, List<Task> tasks) throws TabbyException {
+        String description = input.length() > 4 ? input.substring(4).trim() : "";
+        if (description.isEmpty()) {
+            throw new TabbyException("The description of a todo cannot be empty.");
+        }
+
+        Task task = new Todo(description);
+        tasks.add(task);
+        saveTasks(tasks);
+        printTaskAdded(task, tasks.size());
+    }
+
+    private static void handleDeadline(String input, List<Task> tasks) throws TabbyException {
+        String body = input.length() > 8 ? input.substring(8).trim() : "";
+        if (body.isEmpty()) {
+            throw new TabbyException("The description of a deadline cannot be empty.");
+        }
+        if (!body.contains(" /by ")) {
+            throw new TabbyException("A deadline must include '/by' followed by a time.");
+        }
+
+        String[] parts = body.split(" /by ", 2);
+        String description = parts[0].trim();
+        String byTime = parts.length > 1 ? parts[1].trim() : "";
+
+        if (description.isEmpty()) {
+            throw new TabbyException("The description of a deadline cannot be empty.");
+        }
+        if (byTime.isEmpty()) {
+            throw new TabbyException("The '/by' time of a deadline cannot be empty.");
+        }
+
+        Task task = new Deadline(description, byTime);
+        tasks.add(task);
+        saveTasks(tasks);
+        printTaskAdded(task, tasks.size());
+    }
+
+    private static void handleEvent(String input, List<Task> tasks) throws TabbyException {
+        String body = input.length() > 5 ? input.substring(5).trim() : "";
+        if (body.isEmpty()) {
+            throw new TabbyException("The description of an event cannot be empty.");
+        }
+        if (!body.contains(" /from ") || !body.contains(" /to ")) {
+            throw new TabbyException("An event must include both '/from' and '/to' times.");
+        }
+
+        String[] parts = body.split(" /from ", 2);
+        String description = parts[0].trim();
+        if (description.isEmpty()) {
+            throw new TabbyException("The description of an event cannot be empty.");
+        }
+
+        String[] timeParts = parts[1].split(" /to ", 2);
+        String fromTime = timeParts[0].trim();
+        String toTime = timeParts.length > 1 ? timeParts[1].trim() : "";
+
+        if (fromTime.isEmpty() || toTime.isEmpty()) {
+            throw new TabbyException("The '/from' and '/to' times of an event cannot be empty.");
+        }
+
+        Task task = new Event(description, fromTime, toTime);
+        tasks.add(task);
+        saveTasks(tasks);
+        printTaskAdded(task, tasks.size());
+    }
+
+    private static void printTaskAdded(Task task, int taskCount) {
+        System.out.println(DIVIDER);
+        System.out.println("     Got it. I've added this task:");
+        System.out.println("       " + task);
+        System.out.println("     Now you have " + taskCount + " tasks in the list.");
+        System.out.println(DIVIDER);
+    }
+
+    private static List<Task> loadTasks() {
+        List<Task> loadedTasks = new ArrayList<>();
+        if (!Files.exists(FILE_PATH)) {
+            return loadedTasks;
+        }
+
+        try {
+            List<String> lines = Files.readAllLines(FILE_PATH);
+            for (String line : lines) {
+                Task task = parseTask(line);
+                if (task != null) {
+                    loadedTasks.add(task);
+                }
+            }
+        } catch (IOException ioException) {
+            System.out.println("     Warning: Could not load saved tasks.");
+        }
+        return loadedTasks;
+    }
+
+    private static void saveTasks(List<Task> tasks) {
+        try {
+            if (FILE_PATH.getParent() != null) {
+                Files.createDirectories(FILE_PATH.getParent());
+            }
+            List<String> lines = new ArrayList<>();
+            for (Task task : tasks) {
+                lines.add(task.toFileFormat());
+            }
+            Files.write(FILE_PATH, lines);
+        } catch (IOException ioException) {
+            System.out.println("     Error: Unable to save tasks to file.");
+        }
+    }
+
+    private static Task parseTask(String line) {
+        String[] parts = line.split(FILE_DELIMITER);
+        if (parts.length < 3) {
+            return null;
+        }
+
+        String type = parts[0];
+        boolean isDone = parts[1].equals("1");
+        String description = parts[2];
+
+        Task task = null;
+        switch (type) {
+            case "T":
+                task = new Todo(description);
+                break;
+            case "D":
+                if (parts.length >= 4) {
+                    task = new Deadline(description, parts[3]);
+                }
+                break;
+            case "E":
+                if (parts.length >= 5) {
+                    task = new Event(description, parts[3], parts[4]);
+                }
+                break;
+            default:
+                break;
+        }
+
+        if (task != null && isDone) {
+            task.markAsDone();
+        }
+        return task;
     }
 }
