@@ -3,6 +3,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -16,6 +20,18 @@ public class Tabby {
     private static final String FILE_DELIMITER = " \\| ";
     private static final Path FILE_PATH = Paths.get("data", "tabby.txt");
 
+    private static final DateTimeFormatter[] DATE_TIME_FORMATTERS = new DateTimeFormatter[]{
+        DateTimeFormatter.ofPattern("d/M/yyyy HHmm"),
+        DateTimeFormatter.ofPattern("d/M/yyyy HH:mm"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    };
+
+    private static final DateTimeFormatter[] DATE_FORMATTERS = new DateTimeFormatter[]{
+        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+        DateTimeFormatter.ofPattern("d/M/yyyy")
+    };
+
     /**
      * Custom exception class for chatbot-specific errors.
      */
@@ -23,6 +39,33 @@ public class Tabby {
 
         public TabbyException(String message) {
             super(message);
+        }
+    }
+
+    /**
+     * Helper class to wrap date and time representation and formatting.
+     */
+    public static class ParsedDateTime {
+
+        private final LocalDateTime dateTime;
+        private final boolean hasTime;
+
+        public ParsedDateTime(LocalDateTime dateTime, boolean hasTime) {
+            this.dateTime = dateTime;
+            this.hasTime = hasTime;
+        }
+
+        public String toFileFormat() {
+            return hasTime
+                    ? dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"))
+                    : dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        }
+
+        @Override
+        public String toString() {
+            return hasTime
+                    ? dateTime.format(DateTimeFormatter.ofPattern("MMM dd yyyy, h:mma"))
+                    : dateTime.format(DateTimeFormatter.ofPattern("MMM dd yyyy"));
         }
     }
 
@@ -77,16 +120,16 @@ public class Tabby {
 
     public static class Deadline extends Task {
 
-        protected String by;
+        protected ParsedDateTime by;
 
-        public Deadline(String description, String by) {
+        public Deadline(String description, ParsedDateTime by) {
             super(description);
             this.by = by;
         }
 
         @Override
         public String toFileFormat() {
-            return "D | " + super.toFileFormat() + " | " + by;
+            return "D | " + super.toFileFormat() + " | " + by.toFileFormat();
         }
 
         @Override
@@ -97,10 +140,10 @@ public class Tabby {
 
     public static class Event extends Task {
 
-        protected String from;
-        protected String to;
+        protected ParsedDateTime from;
+        protected ParsedDateTime to;
 
-        public Event(String description, String from, String to) {
+        public Event(String description, ParsedDateTime from, ParsedDateTime to) {
             super(description);
             this.from = from;
             this.to = to;
@@ -108,7 +151,7 @@ public class Tabby {
 
         @Override
         public String toFileFormat() {
-            return "E | " + super.toFileFormat() + " | " + from + " | " + to;
+            return "E | " + super.toFileFormat() + " | " + from.toFileFormat() + " | " + to.toFileFormat();
         }
 
         @Override
@@ -163,6 +206,40 @@ public class Tabby {
         } else {
             throw new TabbyException("I'm sorry, but I don't know what that means :-(");
         }
+    }
+
+    private static ParsedDateTime parseDateTime(String input) throws TabbyException {
+        String trimmed = input.trim();
+
+        for (DateTimeFormatter formatter : DATE_TIME_FORMATTERS) {
+            try {
+                LocalDateTime ldt = LocalDateTime.parse(trimmed, formatter);
+                return new ParsedDateTime(ldt, true);
+            } catch (DateTimeParseException ignored) {
+            }
+        }
+
+        for (DateTimeFormatter formatter : DATE_FORMATTERS) {
+            try {
+                LocalDate ld = LocalDate.parse(trimmed, formatter);
+                return new ParsedDateTime(ld.atStartOfDay(), false);
+            } catch (DateTimeParseException ignored) {
+            }
+        }
+
+        try {
+            LocalDateTime ldt = LocalDateTime.parse(trimmed);
+            return new ParsedDateTime(ldt, true);
+        } catch (DateTimeParseException ignored) {
+        }
+
+        try {
+            LocalDate ld = LocalDate.parse(trimmed);
+            return new ParsedDateTime(ld.atStartOfDay(), false);
+        } catch (DateTimeParseException ignored) {
+        }
+
+        throw new TabbyException("Invalid date format. Use 'yyyy-MM-dd', 'd/M/yyyy HHmm', or 'yyyy-MM-dd HHmm'.");
     }
 
     private static void printList(List<Task> tasks) {
@@ -268,7 +345,8 @@ public class Tabby {
             throw new TabbyException("The '/by' time of a deadline cannot be empty.");
         }
 
-        Task task = new Deadline(description, byTime);
+        ParsedDateTime by = parseDateTime(byTime);
+        Task task = new Deadline(description, by);
         tasks.add(task);
         saveTasks(tasks);
         printTaskAdded(task, tasks.size());
@@ -297,7 +375,9 @@ public class Tabby {
             throw new TabbyException("The '/from' and '/to' times of an event cannot be empty.");
         }
 
-        Task task = new Event(description, fromTime, toTime);
+        ParsedDateTime from = parseDateTime(fromTime);
+        ParsedDateTime to = parseDateTime(toTime);
+        Task task = new Event(description, from, to);
         tasks.add(task);
         saveTasks(tasks);
         printTaskAdded(task, tasks.size());
@@ -357,22 +437,29 @@ public class Tabby {
         String description = parts[2];
 
         Task task = null;
-        switch (type) {
-            case "T":
-                task = new Todo(description);
-                break;
-            case "D":
-                if (parts.length >= 4) {
-                    task = new Deadline(description, parts[3]);
-                }
-                break;
-            case "E":
-                if (parts.length >= 5) {
-                    task = new Event(description, parts[3], parts[4]);
-                }
-                break;
-            default:
-                break;
+        try {
+            switch (type) {
+                case "T":
+                    task = new Todo(description);
+                    break;
+                case "D":
+                    if (parts.length >= 4) {
+                        ParsedDateTime by = parseDateTime(parts[3]);
+                        task = new Deadline(description, by);
+                    }
+                    break;
+                case "E":
+                    if (parts.length >= 5) {
+                        ParsedDateTime from = parseDateTime(parts[3]);
+                        ParsedDateTime to = parseDateTime(parts[4]);
+                        task = new Event(description, from, to);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } catch (TabbyException e) {
+            return null;
         }
 
         if (task != null && isDone) {
