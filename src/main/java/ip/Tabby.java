@@ -1,4 +1,13 @@
 
+package ip;
+
+import ip.collection.TaskList;
+import ip.exception.TabbyException;
+import ip.model.Task;
+import ip.parser.Parser;
+import ip.storage.Storage;
+import ip.ui.Ui;
+
 public class Tabby {
 
     private final Storage storage;

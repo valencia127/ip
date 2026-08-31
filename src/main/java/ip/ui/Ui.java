@@ -1,5 +1,10 @@
 
+package ip.ui;
+
 import java.util.Scanner;
+
+import ip.collection.TaskList;
+import ip.model.Task;
 
 public class Ui {
 

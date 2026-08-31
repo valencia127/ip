@@ -1,4 +1,8 @@
 
+package ip.model;
+
+import ip.parser.ParsedDateTime;
+
 public class Event extends Task {
 
     protected ParsedDateTime from;

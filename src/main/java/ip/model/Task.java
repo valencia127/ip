@@ -1,4 +1,6 @@
 
+package ip.model;
+
 public class Task {
 
     protected String description;

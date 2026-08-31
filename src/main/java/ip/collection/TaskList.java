@@ -1,6 +1,10 @@
 
+package ip.collection;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import ip.model.Task;
 
 public class TaskList {
 

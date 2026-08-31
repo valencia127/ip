@@ -1,4 +1,8 @@
 
+package ip.model;
+
+import ip.parser.ParsedDateTime;
+
 public class Deadline extends Task {
 
     protected ParsedDateTime by;
