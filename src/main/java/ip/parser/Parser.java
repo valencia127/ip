@@ -1,4 +1,3 @@
-
 package ip.parser;
 
 import java.time.LocalDate;
@@ -11,6 +10,7 @@ import ip.model.Deadline;
 import ip.model.Event;
 import ip.model.Todo;
 
+/** Converts user commands and date values into application objects. */
 public class Parser {
 
     private static final DateTimeFormatter[] DATE_TIME_FORMATTERS = new DateTimeFormatter[]{
@@ -25,6 +25,7 @@ public class Parser {
         DateTimeFormatter.ofPattern("d/M/yyyy")
     };
 
+    /** Parses a supported date or date-time string. */
     public static ParsedDateTime parseDateTime(String input) throws TabbyException {
         String trimmed = input.trim();
 
@@ -59,6 +60,7 @@ public class Parser {
         throw new TabbyException("Invalid date format. Use 'yyyy-MM-dd', 'd/M/yyyy HHmm', or 'yyyy-MM-dd HHmm'.");
     }
 
+    /** Extracts and validates a one-based task number, returning a zero-based index. */
     public static int parseTaskIndex(String input, int taskListSize) throws TabbyException {
         String[] parts = input.trim().split("\\s+");
         if (parts.length < 2) {
@@ -79,6 +81,7 @@ public class Parser {
         return taskIndex;
     }
 
+    /** Parses a todo command and validates its description. */
     public static Todo parseTodo(String input) throws TabbyException {
         String description = input.length() > 4 ? input.substring(4).trim() : "";
         if (description.isEmpty()) {
@@ -87,6 +90,7 @@ public class Parser {
         return new Todo(description);
     }
 
+    /** Parses a deadline command and its required due date or time. */
     public static Deadline parseDeadline(String input) throws TabbyException {
         String body = input.length() > 8 ? input.substring(8).trim() : "";
         if (body.isEmpty()) {
@@ -111,6 +115,7 @@ public class Parser {
         return new Deadline(description, by);
     }
 
+    /** Parses an event command and its required start and end values. */
     public static Event parseEvent(String input) throws TabbyException {
         String body = input.length() > 5 ? input.substring(5).trim() : "";
         if (body.isEmpty()) {
