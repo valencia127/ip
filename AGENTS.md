@@ -24,6 +24,10 @@ Unless the user says otherwise, assume that you are assisting a student working 
 
 # Project-specific requirements
 
+## Testing
+
+Maintain JUnit tests for approximately the highest-value 50% of the codebase's methods, prioritizing core business logic, complex validation, and critical behavior. Update the relevant JUnit tests after every code change so that the test coverage target remains satisfied.
+
 ## Java version:
 
 Ensure that Java 25 is used when running the application or build tasks. On macOS, use `sdk use java 25.0.3.fx-zulu` to switch to Java 25 if needed.

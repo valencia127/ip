@@ -1,7 +1,6 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.gradleup.shadow' version '9.5.1'
 }
 
 java {
@@ -37,18 +36,14 @@ test {
 }
 
 application {
-    mainClass = 'seedu.duke.Duke'
+    mainClass = 'ip.Tabby'
 }
 
 jar {
     // A lean JAR file (i.e., without the dependencies packaged inside) is not needed.
     enabled = false
-    // Rename its output anyway; Gradle forbids it clashing with the shadowJar output file, even for a disabled task.
+    // Keep the conventional archive name available for future packaging configuration.
     archiveClassifier = 'without-dependencies'
-}
-
-shadowJar {
-    archiveFileName = 'duke.jar'
 }
 
 run {
