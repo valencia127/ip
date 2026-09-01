@@ -33,4 +33,15 @@ public class TaskList {
     public int size() {
         return tasks.size();
     }
+
+    /** Returns tasks whose descriptions contain the keyword, ignoring case. */
+    public List<Task> find(String keyword) {
+        List<Task> matchingTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getDescription().toLowerCase().contains(keyword.toLowerCase())) {
+                matchingTasks.add(task);
+            }
+        }
+        return matchingTasks;
+    }
 }

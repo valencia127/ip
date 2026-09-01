@@ -23,6 +23,11 @@ public class Task {
         this.isDone = false;
     }
 
+    /** Returns the task description. */
+    public String getDescription() {
+        return description;
+    }
+
     /** Returns the display icon for this task's completion status. */
     public String getStatusIcon() {
         return isDone ? "X" : " ";
@@ -33,8 +38,8 @@ public class Task {
         return (isDone ? "1" : "0") + " | " + description;
     }
 
-    @Override
     /** Returns the user-facing representation of this task. */
+    @Override
     public String toString() {
         return "[" + getStatusIcon() + "] " + description;
     }

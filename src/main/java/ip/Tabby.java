@@ -1,6 +1,8 @@
 
 package ip;
 
+import java.util.List;
+
 import ip.collection.TaskList;
 import ip.exception.TabbyException;
 import ip.model.Task;
@@ -49,6 +51,13 @@ public class Tabby {
     private void executeCommand(String input) throws TabbyException {
         if (input.equals("list")) {
             ui.showTaskList(tasks);
+        } else if (input.startsWith("find")) {
+            String keyword = input.length() > 4 ? input.substring(4).trim() : "";
+            if (keyword.isEmpty()) {
+                throw new TabbyException("Please specify a keyword to find.");
+            }
+            List<Task> matchingTasks = tasks.find(keyword);
+            ui.showMatchingTasks(matchingTasks);
         } else if (input.startsWith("mark")) {
             int index = Parser.parseTaskIndex(input, tasks.size());
             Task task = tasks.get(index);
