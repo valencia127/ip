@@ -2,7 +2,6 @@ package ip.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import org.junit.jupiter.api.Test;
 
 import ip.exception.TabbyException;
@@ -10,6 +9,7 @@ import ip.model.Deadline;
 import ip.model.Event;
 
 class ParserTest {
+
     @Test
     void parseTaskIndex_validCommand_returnsZeroBasedIndex() throws TabbyException {
         assertEquals(1, Parser.parseTaskIndex("delete 2", 3));
