@@ -1,4 +1,3 @@
-
 package ip.ui;
 
 import java.util.List;
@@ -21,8 +20,13 @@ public class Ui {
     }
 
     public void showWelcome() {
+        System.out.println(" _____    _    ____   ____  __   __");
+        System.out.println("|_   _|  / \\  | __ ) | __ ) \\ \\ / /");
+        System.out.println("  | |   / _ \\ |  _ \\ |  _ \\  \\ V / ");
+        System.out.println("  | |  / ___ \\| |_) || |_) |  | |  ");
+        System.out.println("  |_| /_/   \\_\\____/ |____/   |_|  ");
         showLine();
-        System.out.println("     What can I do for you?");
+        System.out.println("     Hello! I'm Tabby. How can I help you?");
         showLine();
         System.out.println();
     }
@@ -86,7 +90,9 @@ public class Ui {
         showLine();
     }
 
-    /** Displays tasks whose descriptions match the supplied keyword. */
+    /**
+     * Displays tasks whose descriptions match the supplied keyword.
+     */
     public void showMatchingTasks(List<Task> matchingTasks) {
         showLine();
         System.out.println("     Here are the matching tasks in your list:");
