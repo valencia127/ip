@@ -1,0 +1,14 @@
+.root {
+    -fx-font-family: System;
+    -fx-background-color: #f7f9fc;
+}
+
+.title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #263238;
+}
+
+TextField {
+    -fx-pref-width: 560px;
+}
