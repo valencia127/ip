@@ -39,12 +39,9 @@ public class TaskList {
     /** Returns tasks whose descriptions contain the keyword, ignoring case. */
     public List<Task> find(String keyword) {
         assert keyword != null : "Search keywords must not be null";
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.getDescription().toLowerCase().contains(keyword.toLowerCase())) {
-                matchingTasks.add(task);
-            }
-        }
-        return matchingTasks;
+        String normalizedKeyword = keyword.toLowerCase();
+        return tasks.stream()
+                .filter(task -> task.getDescription().toLowerCase().contains(normalizedKeyword))
+                .toList();
     }
 }
