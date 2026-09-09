@@ -23,6 +23,7 @@ public class Storage {
     private final Path filePath;
 
     public Storage(String filePathStr) {
+        assert filePathStr != null && !filePathStr.isBlank() : "Storage requires a file path";
         this.filePath = Paths.get(filePathStr);
     }
 
@@ -47,6 +48,7 @@ public class Storage {
     }
 
     public void save(TaskList tasks) throws TabbyException {
+        assert tasks != null : "Storage can only save a task list";
         try {
             if (filePath.getParent() != null) {
                 Files.createDirectories(filePath.getParent());
@@ -62,6 +64,7 @@ public class Storage {
     }
 
     private Task parseTask(String line) {
+        assert line != null : "Storage lines must not be null";
         String[] parts = line.split(FILE_DELIMITER);
         if (parts.length < 3) {
             return null;
@@ -99,6 +102,7 @@ public class Storage {
         if (task != null && isDone) {
             task.markAsDone();
         }
+        assert task == null || task.getDescription() != null : "Loaded tasks must have descriptions";
         return task;
     }
 }

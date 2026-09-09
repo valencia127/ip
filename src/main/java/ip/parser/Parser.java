@@ -101,6 +101,7 @@ public class Parser {
         }
 
         String[] parts = body.split(" /by ", 2);
+        assert parts.length == 2 : "A validated deadline command must split into two parts";
         String description = parts[0].trim();
         String byTime = parts.length > 1 ? parts[1].trim() : "";
 
@@ -112,6 +113,7 @@ public class Parser {
         }
 
         ParsedDateTime by = parseDateTime(byTime);
+        assert by != null : "A valid deadline must have a parsed date or time";
         return new Deadline(description, by);
     }
 
@@ -126,12 +128,14 @@ public class Parser {
         }
 
         String[] parts = body.split(" /from ", 2);
+        assert parts.length == 2 : "A validated event command must contain a start time";
         String description = parts[0].trim();
         if (description.isEmpty()) {
             throw new TabbyException("The description of an event cannot be empty.");
         }
 
         String[] timeParts = parts[1].split(" /to ", 2);
+        assert timeParts.length == 2 : "A validated event command must contain an end time";
         String fromTime = timeParts[0].trim();
         String toTime = timeParts.length > 1 ? timeParts[1].trim() : "";
 
@@ -141,6 +145,7 @@ public class Parser {
 
         ParsedDateTime from = parseDateTime(fromTime);
         ParsedDateTime to = parseDateTime(toTime);
+        assert from != null && to != null : "A valid event must have two parsed date or time values";
         return new Event(description, from, to);
     }
 }

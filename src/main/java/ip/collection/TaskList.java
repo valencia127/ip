@@ -15,10 +15,12 @@ public class TaskList {
     }
 
     public TaskList(List<Task> tasks) {
+        assert tasks != null : "Task list storage must not be null";
         this.tasks = tasks;
     }
 
     public void add(Task task) {
+        assert task != null : "A task list must not contain null tasks";
         tasks.add(task);
     }
 
@@ -36,6 +38,7 @@ public class TaskList {
 
     /** Returns tasks whose descriptions contain the keyword, ignoring case. */
     public List<Task> find(String keyword) {
+        assert keyword != null : "Search keywords must not be null";
         List<Task> matchingTasks = new ArrayList<>();
         for (Task task : tasks) {
             if (task.getDescription().toLowerCase().contains(keyword.toLowerCase())) {
