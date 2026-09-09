@@ -45,6 +45,24 @@ public class Ui {
         System.out.println("     Warning: Could not load saved tasks. Starting with an empty list.");
     }
 
+    /** Displays the available commands and their expected syntax. */
+    public void showHelp() {
+        showLine();
+        System.out.println("     Available commands:");
+        System.out.println("       list                              List all tasks");
+        System.out.println("       find KEYWORD                      Find matching tasks");
+        System.out.println("       todo DESCRIPTION                  Add a todo");
+        System.out.println("       deadline DESCRIPTION /by DATE     Add a deadline");
+        System.out.println("       event DESCRIPTION /from DATE /to DATE");
+        System.out.println("                                         Add an event");
+        System.out.println("       mark NUMBER                       Mark a task as done");
+        System.out.println("       unmark NUMBER                     Mark a task as not done");
+        System.out.println("       delete NUMBER                     Delete a task");
+        System.out.println("       help                              Show this help message");
+        System.out.println("       bye                               Exit Tabby");
+        showLine();
+    }
+
     public void showBye() {
         showLine();
         System.out.println("     Bye. Hope to see you again soon!");

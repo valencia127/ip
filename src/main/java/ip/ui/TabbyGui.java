@@ -94,7 +94,10 @@ public class TabbyGui extends Application {
             return;
         }
         try {
-            if (input.equals("list")) {
+            if (input.equals("help")) {
+                statusLabel.setText("Commands: list, find KEYWORD, todo DESCRIPTION, deadline DESCRIPTION /by DATE, "
+                        + "event DESCRIPTION /from DATE /to DATE, mark NUMBER, unmark NUMBER, delete NUMBER, bye");
+            } else if (input.equals("list")) {
                 refresh(tasks);
             } else if (input.startsWith("find")) {
                 String keyword = input.substring(4).trim();

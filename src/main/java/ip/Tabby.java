@@ -49,7 +49,9 @@ public class Tabby {
     }
 
     private void executeCommand(String input) throws TabbyException {
-        if (input.equals("list")) {
+        if (input.equals("help")) {
+            ui.showHelp();
+        } else if (input.equals("list")) {
             ui.showTaskList(tasks);
         } else if (input.startsWith("find")) {
             String keyword = input.length() > 4 ? input.substring(4).trim() : "";
