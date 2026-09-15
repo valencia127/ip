@@ -19,6 +19,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -30,17 +31,23 @@ public class TabbyGui extends Application {
     private final ObservableList<Task> displayedTasks = FXCollections.observableArrayList();
     private final ListView<Task> taskListView = new ListView<>(displayedTasks);
     private final TextField commandField = new TextField();
-    private final Label statusLabel = new Label("Welcome to Tabby!");
+    private final Label statusLabel = new Label("Ready when you are.");
+    private final Label countLabel = new Label();
 
     @Override
     public void start(Stage stage) {
         loadTasks();
-        Label title = new Label("Tabby Task Manager");
+        Label eyebrow = new Label("TABBY / TASK MANAGER");
+        eyebrow.getStyleClass().add("eyebrow");
+        Label title = new Label("Stay on top of things.");
         title.getStyleClass().add("title");
+        Label subtitle = new Label("Use a command below, or select a task for quick actions.");
+        subtitle.getStyleClass().add("subtitle");
         commandField.setPromptText("todo read lecture notes");
         commandField.setOnAction(event -> executeCommand());
 
-        Button runButton = new Button("Run command");
+        Button runButton = new Button("Run  ↵");
+        runButton.getStyleClass().add("primary-button");
         runButton.setOnAction(event -> executeCommand());
         Button listButton = new Button("List");
         listButton.setOnAction(event -> refresh(tasks));
@@ -51,29 +58,61 @@ public class TabbyGui extends Application {
         Button deleteButton = new Button("Delete");
         deleteButton.setOnAction(event -> deleteSelectedTask());
 
-        HBox commandBar = new HBox(8, commandField, runButton);
+        HBox.setHgrow(commandField, Priority.ALWAYS);
+        HBox commandBar = new HBox(10, commandField, runButton);
+        commandBar.getStyleClass().add("command-bar");
         HBox actions = new HBox(8, listButton, markButton, unmarkButton, deleteButton);
-        VBox top = new VBox(10, title, commandBar, actions);
-        top.setPadding(new Insets(16));
+        countLabel.getStyleClass().add("count-label");
+        HBox listHeading = new HBox(new Label("YOUR TASKS"), countLabel);
+        listHeading.getStyleClass().add("list-heading");
+        HBox.setHgrow(countLabel, Priority.ALWAYS);
+        countLabel.setMaxWidth(Double.MAX_VALUE);
+        countLabel.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        VBox top = new VBox(5, eyebrow, title, subtitle, commandBar, actions, listHeading);
+        top.getStyleClass().add("top-panel");
 
-        taskListView.setPlaceholder(new Label("No tasks yet. Add one above."));
+        Label emptyLabel = new Label("No tasks yet\nAdd your first one above.");
+        emptyLabel.getStyleClass().add("empty-state");
+        taskListView.setPlaceholder(emptyLabel);
+        taskListView.setFixedCellSize(58);
         taskListView.setCellFactory(view -> new ListCell<>() {
             @Override
             protected void updateItem(Task task, boolean empty) {
                 super.updateItem(task, empty);
-                setText(empty || task == null ? null : (getIndex() + 1) + ". " + task);
+                if (empty || task == null) {
+                    setText(null);
+                    setGraphic(null);
+                    return;
+                }
+                Label number = new Label(String.format("%02d", getIndex() + 1));
+                number.getStyleClass().add("task-number");
+                Label text = new Label(task.toString());
+                text.getStyleClass().add("task-text");
+                text.setWrapText(true);
+                HBox row = new HBox(14, number, text);
+                row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                setGraphic(row);
+                setText(null);
+                getStyleClass().removeAll("done-task");
+                if (task.getStatusIcon().equals("X")) {
+                    getStyleClass().add("done-task");
+                }
             }
         });
 
         BorderPane root = new BorderPane(taskListView);
+        root.getStyleClass().add("app-shell");
         root.setTop(top);
         root.setBottom(statusLabel);
-        BorderPane.setMargin(taskListView, new Insets(0, 16, 16, 16));
-        BorderPane.setMargin(statusLabel, new Insets(0, 16, 16, 16));
-        Scene scene = new Scene(root, 760, 520);
+        BorderPane.setMargin(taskListView, new Insets(0, 24, 12, 24));
+        BorderPane.setMargin(statusLabel, new Insets(0, 24, 18, 24));
+        statusLabel.getStyleClass().add("status-label");
+        Scene scene = new Scene(root, 760, 560);
         scene.getStylesheets().add(getClass().getResource("/tabby.css").toExternalForm());
         stage.setTitle("Tabby");
         stage.setScene(scene);
+        stage.setMinWidth(480);
+        stage.setMinHeight(420);
         stage.show();
     }
 
@@ -83,14 +122,14 @@ public class TabbyGui extends Application {
             loadedTasks.forEach(tasks::add);
             refresh(tasks);
         } catch (TabbyException exception) {
-            statusLabel.setText(exception.getMessage());
+            showError(exception.getMessage());
         }
     }
 
     private void executeCommand() {
         String input = commandField.getText().trim();
         if (input.isEmpty()) {
-            statusLabel.setText("Please enter a command.");
+            showError("Please enter a command.");
             return;
         }
         try {
@@ -128,7 +167,7 @@ public class TabbyGui extends Application {
                 throw new TabbyException("I'm sorry, but I don't know what that means.");
             }
         } catch (TabbyException exception) {
-            statusLabel.setText(exception.getMessage());
+            showError(exception.getMessage());
         }
         commandField.clear();
     }
@@ -147,7 +186,7 @@ public class TabbyGui extends Application {
     private void changeSelectedTask(boolean markDone) {
         int index = taskListView.getSelectionModel().getSelectedIndex();
         if (index < 0 || index >= tasks.size()) {
-            statusLabel.setText("Select a task first.");
+            showError("Select a task first.");
             return;
         }
         try {
@@ -159,21 +198,21 @@ public class TabbyGui extends Application {
             }
             saveAndRefresh(markDone ? "Task marked as done." : "Task marked as not done.");
         } catch (TabbyException exception) {
-            statusLabel.setText(exception.getMessage());
+            showError(exception.getMessage());
         }
     }
 
     private void deleteSelectedTask() {
         int index = taskListView.getSelectionModel().getSelectedIndex();
         if (index < 0 || index >= tasks.size()) {
-            statusLabel.setText("Select a task first.");
+            showError("Select a task first.");
             return;
         }
         try {
             tasks.delete(index);
             saveAndRefresh("Task deleted.");
         } catch (TabbyException exception) {
-            statusLabel.setText(exception.getMessage());
+            showError(exception.getMessage());
         }
     }
 
@@ -181,10 +220,19 @@ public class TabbyGui extends Application {
         storage.save(tasks);
         refresh(tasks);
         statusLabel.setText(message);
+        statusLabel.getStyleClass().remove("error");
+    }
+
+    private void showError(String message) {
+        statusLabel.setText("!  " + message);
+        if (!statusLabel.getStyleClass().contains("error")) {
+            statusLabel.getStyleClass().add("error");
+        }
     }
 
     private void refresh(TaskList source) {
         displayedTasks.setAll(source.find(""));
+        countLabel.setText(displayedTasks.size() + (displayedTasks.size() == 1 ? " task" : " tasks"));
     }
 
     public static void main(String[] args) {

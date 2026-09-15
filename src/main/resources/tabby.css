@@ -1,14 +1,25 @@
-.root {
-    -fx-font-family: System;
-    -fx-background-color: #f7f9fc;
-}
-
-.title {
-    -fx-font-size: 24px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #263238;
-}
-
-TextField {
-    -fx-pref-width: 560px;
-}
+.root { -fx-font-family: "Avenir Next", "Helvetica Neue", sans-serif; -fx-background-color: #f5f7fb; }
+.app-shell { -fx-background-color: #f5f7fb; }
+.top-panel { -fx-padding: 26px 24px 16px 24px; -fx-background-color: #ffffff; }
+.eyebrow { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #697386; -fx-letter-spacing: 1.4px; }
+.title { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #172033; }
+.subtitle { -fx-font-size: 13px; -fx-text-fill: #697386; -fx-padding: 0 0 10px 0; }
+.command-bar { -fx-padding: 4px 0; }
+.text-field { -fx-background-color: #f5f7fb; -fx-border-color: #dce2ed; -fx-border-radius: 7px; -fx-background-radius: 7px; -fx-padding: 10px 13px; -fx-font-size: 14px; }
+.text-field:focused { -fx-border-color: #5865d9; -fx-background-color: #ffffff; }
+.button { -fx-background-color: #e9edf5; -fx-text-fill: #3d475b; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 9px 13px; -fx-cursor: hand; }
+.button:hover { -fx-background-color: #dce3f0; }
+.primary-button { -fx-background-color: #5865d9; -fx-text-fill: white; }
+.primary-button:hover { -fx-background-color: #4653c7; }
+.list-heading { -fx-padding: 13px 0 0 0; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #8791a5; }
+.count-label { -fx-font-size: 12px; -fx-font-weight: normal; -fx-text-fill: #8791a5; }
+.list-view { -fx-background-color: transparent; -fx-border-width: 0; -fx-padding: 0; }
+.list-cell { -fx-background-color: #ffffff; -fx-border-color: transparent transparent #edf0f5 transparent; -fx-padding: 0 14px; }
+.list-cell:filled:hover { -fx-background-color: #f8f9fd; }
+.list-cell:filled:selected { -fx-background-color: #eef0ff; }
+.task-number { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #9aa4b7; }
+.task-text { -fx-font-size: 14px; -fx-text-fill: #293247; }
+.done-task .task-text { -fx-text-fill: #99a1b0; -fx-strikethrough: true; }
+.empty-state { -fx-text-alignment: center; -fx-text-fill: #8993a6; -fx-font-size: 14px; -fx-line-spacing: 6px; }
+.status-label { -fx-font-size: 12px; -fx-text-fill: #5865d9; }
+.status-label.error { -fx-text-fill: #c43d55; -fx-font-weight: bold; }
