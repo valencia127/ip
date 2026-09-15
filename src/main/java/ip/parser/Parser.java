@@ -63,8 +63,8 @@ public class Parser {
     /** Extracts and validates a one-based task number, returning a zero-based index. */
     public static int parseTaskIndex(String input, int taskListSize) throws TabbyException {
         String[] parts = input.trim().split("\\s+");
-        if (parts.length < 2) {
-            throw new TabbyException("Please specify a task number.");
+        if (parts.length != 2) {
+            throw new TabbyException("Please specify exactly one task number.");
         }
 
         int taskIndex;
@@ -83,6 +83,7 @@ public class Parser {
 
     /** Parses a todo command and validates its description. */
     public static Todo parseTodo(String input) throws TabbyException {
+        validateCommandPrefix(input, "todo");
         String description = input.length() > 4 ? input.substring(4).trim() : "";
         if (description.isEmpty()) {
             throw new TabbyException("The description of a todo cannot be empty.");
@@ -92,11 +93,12 @@ public class Parser {
 
     /** Parses a deadline command and its required due date or time. */
     public static Deadline parseDeadline(String input) throws TabbyException {
+        validateCommandPrefix(input, "deadline");
         String body = input.length() > 8 ? input.substring(8).trim() : "";
         if (body.isEmpty()) {
             throw new TabbyException("The description of a deadline cannot be empty.");
         }
-        if (!body.contains(" /by ")) {
+        if (countOccurrences(body, "/by") != 1 || !body.contains(" /by ")) {
             throw new TabbyException("A deadline must include '/by' followed by a time.");
         }
 
@@ -119,11 +121,13 @@ public class Parser {
 
     /** Parses an event command and its required start and end values. */
     public static Event parseEvent(String input) throws TabbyException {
+        validateCommandPrefix(input, "event");
         String body = input.length() > 5 ? input.substring(5).trim() : "";
         if (body.isEmpty()) {
             throw new TabbyException("The description of an event cannot be empty.");
         }
-        if (!body.contains(" /from ") || !body.contains(" /to ")) {
+        if (countOccurrences(body, "/from") != 1 || countOccurrences(body, "/to") != 1
+                || !body.contains(" /from ") || !body.contains(" /to ")) {
             throw new TabbyException("An event must include both '/from' and '/to' times.");
         }
 
@@ -145,7 +149,28 @@ public class Parser {
 
         ParsedDateTime from = parseDateTime(fromTime);
         ParsedDateTime to = parseDateTime(toTime);
+        if (!from.getDateTime().isBefore(to.getDateTime())) {
+            throw new TabbyException("An event must start before it ends.");
+        }
         assert from != null && to != null : "A valid event must have two parsed date or time values";
         return new Event(description, from, to);
+    }
+
+    private static void validateCommandPrefix(String input, String command) throws TabbyException {
+        if (input == null || !input.trim().startsWith(command)
+                || (input.trim().length() > command.length()
+                && !Character.isWhitespace(input.trim().charAt(command.length())))) {
+            throw new TabbyException("Invalid " + command + " command format.");
+        }
+    }
+
+    private static int countOccurrences(String input, String token) {
+        int count = 0;
+        int index = 0;
+        while ((index = input.indexOf(token, index)) >= 0) {
+            count++;
+            index += token.length();
+        }
+        return count;
     }
 }

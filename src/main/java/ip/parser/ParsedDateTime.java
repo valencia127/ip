@@ -33,6 +33,11 @@ public class ParsedDateTime {
                 : dateTime.format(STORAGE_DATE_FORMATTER);
     }
 
+    /** Returns the underlying date and time for chronological validation. */
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
     @Override
     /** Returns the user-facing date or date-time format. */
     public String toString() {
