@@ -156,6 +156,7 @@ public class Parser {
         return new Event(description, from, to);
     }
 
+    /** Ensures that input begins with the requested command as a whole word. */
     private static void validateCommandPrefix(String input, String command) throws TabbyException {
         if (input == null || !input.trim().startsWith(command)
                 || (input.trim().length() > command.length()
@@ -164,6 +165,7 @@ public class Parser {
         }
     }
 
+    /** Counts non-overlapping occurrences of a token in an input string. */
     private static int countOccurrences(String input, String token) {
         int count = 0;
         int index = 0;

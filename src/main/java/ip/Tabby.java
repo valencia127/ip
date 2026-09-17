@@ -10,12 +10,14 @@ import ip.parser.Parser;
 import ip.storage.Storage;
 import ip.ui.Ui;
 
+/** Coordinates the command-line task manager. */
 public class Tabby {
 
     private final Storage storage;
     private final TaskList tasks;
     private final Ui ui;
 
+    /** Creates Tabby using the supplied task-storage path. */
     public Tabby(String filePath) {
         ui = new Ui();
         storage = new Storage(filePath);
@@ -29,6 +31,7 @@ public class Tabby {
         tasks = loadedTasks;
     }
 
+    /** Runs the command-line interaction loop until the user exits. */
     public void run() {
         ui.showWelcome();
 
@@ -48,13 +51,19 @@ public class Tabby {
         ui.close();
     }
 
+    /** Executes one already-read command. */
     private void executeCommand(String input) throws TabbyException {
+        dispatchCommand(input);
+    }
+
+    /** Routes a command to the operation that handles it. */
+    private void dispatchCommand(String input) throws TabbyException {
         if (input.equals("help")) {
             ui.showHelp();
         } else if (input.equals("list")) {
             ui.showTaskList(tasks);
         } else if (isCommand(input, "find")) {
-            String keyword = input.length() > 4 ? input.substring(4).trim() : "";
+            String keyword = input.substring(4).trim();
             if (keyword.isEmpty()) {
                 throw new TabbyException("Please specify a keyword to find.");
             }
@@ -102,6 +111,7 @@ public class Tabby {
         return input.equals(command) || input.startsWith(command + " ");
     }
 
+    /** Starts the command-line application. */
     public static void main(String[] args) {
         new Tabby("data/tabby.txt").run();
     }

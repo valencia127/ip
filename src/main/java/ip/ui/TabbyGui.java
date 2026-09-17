@@ -28,6 +28,7 @@ public class TabbyGui extends Application {
     private final TextField commandField = new TextField();
     private final ScrollPane conversationScroll = new ScrollPane(conversation);
 
+    /** Builds and displays the chat-style task manager window. */
     @Override
     public void start(Stage stage) {
         loadTasks();
@@ -82,6 +83,7 @@ public class TabbyGui extends Application {
         scrollToLatest();
     }
 
+    /** Loads saved tasks and reports a recoverable storage problem in the chat. */
     private void loadTasks() {
         try {
             storage.load().forEach(tasks::add);
@@ -91,6 +93,7 @@ public class TabbyGui extends Application {
         }
     }
 
+    /** Reads the composer input, executes it, and clears the composer. */
     private void executeCommand() {
         String input = commandField.getText().trim();
         if (input.isEmpty()) {
@@ -99,46 +102,7 @@ public class TabbyGui extends Application {
         }
         addUserMessage(input);
         try {
-            if (input.equals("help")) {
-                addAssistantMessage("You can use: list, find KEYWORD, todo DESCRIPTION, deadline DESCRIPTION /by DATE, "
-                        + "event DESCRIPTION /from DATE /to DATE, mark NUMBER, unmark NUMBER, delete NUMBER, or bye.");
-            } else if (input.equals("list")) {
-                addAssistantMessage(taskSummary(tasks));
-            } else if (isCommand(input, "find")) {
-                String keyword = input.substring(4).trim();
-                if (keyword.isEmpty()) {
-                    throw new TabbyException("Please specify a keyword to find.");
-                }
-                addAssistantMessage(taskSummary(new TaskList(tasks.find(keyword))));
-            } else if (isCommand(input, "mark")) {
-                updateTask(input, true);
-            } else if (isCommand(input, "unmark")) {
-                updateTask(input, false);
-            } else if (isCommand(input, "delete")) {
-                int index = Parser.parseTaskIndex(input, tasks.size());
-                Task removed = tasks.delete(index);
-                storage.save(tasks);
-                addAssistantMessage("Done — I removed:\n" + removed);
-            } else if (isCommand(input, "todo")) {
-                Task task = Parser.parseTodo(input);
-                tasks.add(task);
-                storage.save(tasks);
-                addAssistantMessage("Added to your plans:\n" + task);
-            } else if (isCommand(input, "deadline")) {
-                Task task = Parser.parseDeadline(input);
-                tasks.add(task);
-                storage.save(tasks);
-                addAssistantMessage("Added your deadline:\n" + task);
-            } else if (isCommand(input, "event")) {
-                Task task = Parser.parseEvent(input);
-                tasks.add(task);
-                storage.save(tasks);
-                addAssistantMessage("Added your event:\n" + task);
-            } else if (input.equals("bye")) {
-                addAssistantMessage("See you later! Your tasks are safely saved.");
-            } else {
-                throw new TabbyException("I didn’t recognise that command. Try ‘help’ to see what I can do.");
-            }
+            dispatchCommand(input);
         } catch (TabbyException exception) {
             addErrorMessage(exception.getMessage());
         }
@@ -146,23 +110,110 @@ public class TabbyGui extends Application {
         commandField.requestFocus();
     }
 
+    /** Routes a valid input to the method responsible for carrying it out. */
+    private void dispatchCommand(String input) throws TabbyException {
+        if (input.equals("help")) {
+            showHelp();
+        } else if (input.equals("list")) {
+            showAllTasks();
+        } else if (isCommand(input, "find")) {
+            findTasks(input);
+        } else if (isCommand(input, "mark")) {
+            updateTask(input, true);
+        } else if (isCommand(input, "unmark")) {
+            updateTask(input, false);
+        } else if (isCommand(input, "delete")) {
+            deleteTask(input);
+        } else if (isCommand(input, "todo")) {
+            addTask(Parser.parseTodo(input), "Added to your plans:");
+        } else if (isCommand(input, "deadline")) {
+            addTask(Parser.parseDeadline(input), "Added your deadline:");
+        } else if (isCommand(input, "event")) {
+            addTask(Parser.parseEvent(input), "Added your event:");
+        } else if (input.equals("bye")) {
+            sayGoodbye();
+        } else {
+            throw new TabbyException("I didn’t recognise that command. Try ‘help’ to see what I can do.");
+        }
+    }
+
+    /** Adds the supported command list to the conversation. */
+    private void showHelp() {
+        addAssistantMessage("You can use: list, find KEYWORD, todo DESCRIPTION, deadline DESCRIPTION /by DATE, "
+                + "event DESCRIPTION /from DATE /to DATE, mark NUMBER, unmark NUMBER, delete NUMBER, or bye.");
+    }
+
+    /** Adds all current tasks to the conversation. */
+    private void showAllTasks() {
+        addAssistantMessage(taskSummary(tasks));
+    }
+
+    /** Finds tasks matching the keyword in a command. */
+    private void findTasks(String input) throws TabbyException {
+        String keyword = input.substring(4).trim();
+        if (keyword.isEmpty()) {
+            throw new TabbyException("Please specify a keyword to find.");
+        }
+        addAssistantMessage(taskSummary(new TaskList(tasks.find(keyword))));
+    }
+
+    /** Deletes the task identified by a command and persists the result. */
+    private void deleteTask(String input) throws TabbyException {
+        int index = Parser.parseTaskIndex(input, tasks.size());
+        Task removed = tasks.delete(index);
+        saveTasks();
+        addAssistantMessage("Done — I removed:\n" + removed);
+    }
+
+    /** Adds and persists a parsed task, then reports the result. */
+    private void addTask(Task task, String message) throws TabbyException {
+        tasks.add(task);
+        saveTasks();
+        addAssistantMessage(message + "\n" + task);
+    }
+
+    /** Adds the assistant's exit message to the conversation. */
+    private void sayGoodbye() {
+        addAssistantMessage("See you later! Your tasks are safely saved.");
+    }
+
+    /** Updates a task's completion status and persists the change. */
     private void updateTask(String input, boolean markDone) throws TabbyException {
         int index = Parser.parseTaskIndex(input, tasks.size());
+        Task task = changeTaskStatus(index, markDone);
+        saveTasks();
+        showStatusChange(task, markDone);
+    }
+
+    /** Changes the completion status of the task at the supplied index. */
+    private Task changeTaskStatus(int index, boolean markDone) {
         Task task = tasks.get(index);
         if (markDone) {
             task.markAsDone();
         } else {
             task.markAsNotDone();
         }
-        storage.save(tasks);
-        addAssistantMessage(markDone ? "Nice — I marked this task as done:\n" + task
-                : "Okay — I marked this task as not done:\n" + task);
+        return task;
     }
 
+    /** Persists the current task list. */
+    private void saveTasks() throws TabbyException {
+        storage.save(tasks);
+    }
+
+    /** Reports a successful completion-status change. */
+    private void showStatusChange(Task task, boolean markDone) {
+        String message = markDone ? "Nice — I marked this task as done:\n"
+                : "Okay — I marked this task as not done:\n";
+        addAssistantMessage(message + task);
+    }
+
+    /** Returns whether input is exactly a command or starts with its argument. */
     private boolean isCommand(String input, String command) {
         return input.equals(command) || input.startsWith(command + " ");
     }
 
+    /** Formats a task list for display in an assistant message. */
     private String taskSummary(TaskList source) {
         if (source.size() == 0) {
             return "You don’t have any matching tasks yet. Add one whenever you’re ready!";
@@ -174,11 +225,13 @@ public class TabbyGui extends Application {
         return summary.toString().trim();
     }
 
+    /** Adds a left-aligned assistant message to the conversation. */
     private void addAssistantMessage(String message) {
         conversation.getChildren().add(createMessage(message, false));
         scrollToLatest();
     }
 
+    /** Adds a styled error message to the conversation. */
     private void addErrorMessage(String message) {
         HBox bubble = createMessage("I couldn’t do that: " + message, false);
         bubble.getStyleClass().add("error-message");
@@ -186,11 +239,13 @@ public class TabbyGui extends Application {
         scrollToLatest();
     }
 
+    /** Adds a right-aligned user message to the conversation. */
     private void addUserMessage(String message) {
         conversation.getChildren().add(createMessage(message, true));
         scrollToLatest();
     }
 
+    /** Creates a chat row containing an avatar and message bubble. */
     private HBox createMessage(String message, boolean user) {
         Label bubble = new Label(message);
         bubble.setWrapText(true);
@@ -208,10 +263,12 @@ public class TabbyGui extends Application {
         return row;
     }
 
+    /** Scrolls the conversation to its newest message. */
     private void scrollToLatest() {
         javafx.application.Platform.runLater(() -> conversationScroll.setVvalue(1.0));
     }
 
+    /** Starts the JavaFX application. */
     public static void main(String[] args) {
         launch(args);
     }

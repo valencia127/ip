@@ -6,19 +6,23 @@ import java.util.Scanner;
 import ip.collection.TaskList;
 import ip.model.Task;
 
+/** Handles command-line input and output for Tabby. */
 public class Ui {
 
     private static final String DIVIDER = "    ____________________________________________________________";
     private final Scanner scanner;
 
+    /** Creates a command-line interface backed by standard input. */
     public Ui() {
         this.scanner = new Scanner(System.in);
     }
 
+    /** Reads and trims one command, returning {@code bye} at end of input. */
     public String readCommand() {
         return scanner.hasNextLine() ? scanner.nextLine().trim() : "bye";
     }
 
+    /** Displays the application's welcome message. */
     public void showWelcome() {
         System.out.println(" _____    _    ____   ____  __   __");
         System.out.println("|_   _|  / \\  | __ ) | __ ) \\ \\ / /");
@@ -31,16 +35,19 @@ public class Ui {
         System.out.println();
     }
 
+    /** Displays the standard output divider. */
     public void showLine() {
         System.out.println(DIVIDER);
     }
 
+    /** Displays a user-facing error message. */
     public void showError(String message) {
         showLine();
         System.out.println("     OOPS!!! " + message);
         showLine();
     }
 
+    /** Displays a warning when saved tasks cannot be loaded. */
     public void showLoadingError() {
         System.out.println("     Warning: Could not load saved tasks. Starting with an empty list.");
     }
@@ -63,12 +70,14 @@ public class Ui {
         showLine();
     }
 
+    /** Displays the exit message. */
     public void showBye() {
         showLine();
         System.out.println("     Bye. Hope to see you again soon!");
         showLine();
     }
 
+    /** Displays confirmation that a task was added. */
     public void showTaskAdded(Task task, int taskCount) {
         showLine();
         System.out.println("     Got it. I've added this task:");
@@ -77,6 +86,7 @@ public class Ui {
         showLine();
     }
 
+    /** Displays confirmation that a task was deleted. */
     public void showTaskDeleted(Task task, int taskCount) {
         showLine();
         System.out.println("     Noted. I've removed this task:");
@@ -85,6 +95,7 @@ public class Ui {
         showLine();
     }
 
+    /** Displays confirmation that a task was marked done. */
     public void showMarkedDone(Task task) {
         showLine();
         System.out.println("     Nice! I've marked this task as done:");
@@ -92,6 +103,7 @@ public class Ui {
         showLine();
     }
 
+    /** Displays confirmation that a task was marked not done. */
     public void showMarkedNotDone(Task task) {
         showLine();
         System.out.println("     OK, I've marked this task as not done yet:");
@@ -99,6 +111,7 @@ public class Ui {
         showLine();
     }
 
+    /** Displays every task in the supplied list. */
     public void showTaskList(TaskList tasks) {
         showLine();
         System.out.println("     Here are the tasks in your list:");
@@ -120,6 +133,7 @@ public class Ui {
         showLine();
     }
 
+    /** Closes the command-line input scanner. */
     public void close() {
         scanner.close();
     }

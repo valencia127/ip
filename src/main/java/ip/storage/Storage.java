@@ -17,16 +17,19 @@ import ip.model.Todo;
 import ip.parser.ParsedDateTime;
 import ip.parser.Parser;
 
+/** Reads and writes tasks using the application's text-file format. */
 public class Storage {
 
     private static final String FILE_DELIMITER = " \\| ";
     private final Path filePath;
 
+    /** Creates storage backed by the supplied file path. */
     public Storage(String filePathStr) {
         assert filePathStr != null && !filePathStr.isBlank() : "Storage requires a file path";
         this.filePath = Paths.get(filePathStr);
     }
 
+    /** Loads valid tasks from disk, returning an empty list when the file is absent. */
     public List<Task> load() throws TabbyException {
         List<Task> loadedTasks = new ArrayList<>();
         if (!Files.exists(filePath)) {
@@ -47,6 +50,7 @@ public class Storage {
         return loadedTasks;
     }
 
+    /** Saves all tasks to disk, creating the parent directory when necessary. */
     public void save(TaskList tasks) throws TabbyException {
         assert tasks != null : "Storage can only save a task list";
         try {
@@ -63,6 +67,7 @@ public class Storage {
         }
     }
 
+    /** Converts one storage line into a task, or returns null for malformed data. */
     private Task parseTask(String line) {
         assert line != null : "Storage lines must not be null";
         String[] parts = line.split(FILE_DELIMITER);
