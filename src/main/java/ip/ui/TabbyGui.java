@@ -138,27 +138,27 @@ public class TabbyGui extends Application {
                         + "event DESCRIPTION /from DATE /to DATE, mark NUMBER, unmark NUMBER, delete NUMBER, bye");
             } else if (input.equals("list")) {
                 refresh(tasks);
-            } else if (input.startsWith("find")) {
+            } else if (isCommand(input, "find")) {
                 String keyword = input.substring(4).trim();
                 if (keyword.isEmpty()) {
                     throw new TabbyException("Please specify a keyword to find.");
                 }
                 refresh(new TaskList(tasks.find(keyword)));
-            } else if (input.startsWith("mark")) {
+            } else if (isCommand(input, "mark")) {
                 updateTask(input, true);
-            } else if (input.startsWith("unmark")) {
+            } else if (isCommand(input, "unmark")) {
                 updateTask(input, false);
-            } else if (input.startsWith("delete")) {
+            } else if (isCommand(input, "delete")) {
                 int index = Parser.parseTaskIndex(input, tasks.size());
                 tasks.delete(index);
                 saveAndRefresh("Task deleted.");
-            } else if (input.startsWith("todo")) {
+            } else if (isCommand(input, "todo")) {
                 tasks.add(Parser.parseTodo(input));
                 saveAndRefresh("Todo added.");
-            } else if (input.startsWith("deadline")) {
+            } else if (isCommand(input, "deadline")) {
                 tasks.add(Parser.parseDeadline(input));
                 saveAndRefresh("Deadline added.");
-            } else if (input.startsWith("event")) {
+            } else if (isCommand(input, "event")) {
                 tasks.add(Parser.parseEvent(input));
                 saveAndRefresh("Event added.");
             } else if (input.equals("bye")) {
@@ -170,6 +170,11 @@ public class TabbyGui extends Application {
             showError(exception.getMessage());
         }
         commandField.clear();
+    }
+
+    /** Returns whether the input is the command itself or the command followed by whitespace. */
+    private boolean isCommand(String input, String command) {
+        return input.equals(command) || input.startsWith(command + " ");
     }
 
     private void updateTask(String input, boolean markDone) throws TabbyException {

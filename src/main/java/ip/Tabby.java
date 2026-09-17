@@ -53,41 +53,41 @@ public class Tabby {
             ui.showHelp();
         } else if (input.equals("list")) {
             ui.showTaskList(tasks);
-        } else if (input.startsWith("find")) {
+        } else if (isCommand(input, "find")) {
             String keyword = input.length() > 4 ? input.substring(4).trim() : "";
             if (keyword.isEmpty()) {
                 throw new TabbyException("Please specify a keyword to find.");
             }
             List<Task> matchingTasks = tasks.find(keyword);
             ui.showMatchingTasks(matchingTasks);
-        } else if (input.startsWith("mark")) {
+        } else if (isCommand(input, "mark")) {
             int index = Parser.parseTaskIndex(input, tasks.size());
             Task task = tasks.get(index);
             task.markAsDone();
             storage.save(tasks);
             ui.showMarkedDone(task);
-        } else if (input.startsWith("unmark")) {
+        } else if (isCommand(input, "unmark")) {
             int index = Parser.parseTaskIndex(input, tasks.size());
             Task task = tasks.get(index);
             task.markAsNotDone();
             storage.save(tasks);
             ui.showMarkedNotDone(task);
-        } else if (input.startsWith("delete")) {
+        } else if (isCommand(input, "delete")) {
             int index = Parser.parseTaskIndex(input, tasks.size());
             Task removedTask = tasks.delete(index);
             storage.save(tasks);
             ui.showTaskDeleted(removedTask, tasks.size());
-        } else if (input.startsWith("todo")) {
+        } else if (isCommand(input, "todo")) {
             Task task = Parser.parseTodo(input);
             tasks.add(task);
             storage.save(tasks);
             ui.showTaskAdded(task, tasks.size());
-        } else if (input.startsWith("deadline")) {
+        } else if (isCommand(input, "deadline")) {
             Task task = Parser.parseDeadline(input);
             tasks.add(task);
             storage.save(tasks);
             ui.showTaskAdded(task, tasks.size());
-        } else if (input.startsWith("event")) {
+        } else if (isCommand(input, "event")) {
             Task task = Parser.parseEvent(input);
             tasks.add(task);
             storage.save(tasks);
@@ -95,6 +95,11 @@ public class Tabby {
         } else {
             throw new TabbyException("I'm sorry, but I don't know what that means :-(");
         }
+    }
+
+    /** Returns whether the input is the command itself or the command followed by whitespace. */
+    private boolean isCommand(String input, String command) {
+        return input.equals(command) || input.startsWith(command + " ");
     }
 
     public static void main(String[] args) {
