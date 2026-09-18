@@ -27,6 +27,17 @@ repositories {
 
 dependencies {
     String jUnitVersion = '5.14.4'
+    String javafxVersion = '21'
+    List<String> javafxPlatforms = ['win', 'linux', 'mac', 'mac-aarch64']
+
+    // Bundle JavaFX runtime modules for the major desktop platforms in the fat JAR.
+    // The JavaFX Gradle plugin adds the current platform by default; these entries
+    // ensure that the published JAR also contains the other platforms' natives.
+    javafxPlatforms.each { platform ->
+        implementation "org.openjfx:javafx-base:${javafxVersion}:${platform}"
+        implementation "org.openjfx:javafx-graphics:${javafxVersion}:${platform}"
+        implementation "org.openjfx:javafx-controls:${javafxVersion}:${platform}"
+    }
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jUnitVersion}"
 
@@ -50,7 +61,7 @@ test {
 }
 
 application {
-    mainClass = 'ip.ui.TabbyGui'
+    mainClass = 'ip.Launcher'
 }
 
 jar {
@@ -67,4 +78,6 @@ run {
 
 shadowJar {
     archiveFileName = 'tabby.jar'
+    mergeServiceFiles()
+    exclude 'module-info.class'
 }
